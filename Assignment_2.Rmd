@@ -23,9 +23,9 @@ In this assignment information about the boiling point of simple molecules is re
   library(WikidataQueryServiceR)
 
   # define and request query
-  r <- query_wikidata('SELECT ?ane ?aneLabel ?bp ?bpUnit ?bpUnitLabel ?CC 
+  r <- query_wikidata('SELECT ?ane ?aneLabel ?bp ?bpUnit ?bpUnitLabel ?SMILES 
                       WHERE {   ?ane wdt:P31/wdt:P279* wd:Q41581 ;   
-                      wdt:P233 ?CC ;     
+                      wdt:P233 ?SMILES ;     
                       p:P2102 [         ps:P2102 ?bp ;           
                       psv:P2102/wikibase:quantityUnit  ?bpUnit         ] .   
                       SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } } 
@@ -44,7 +44,7 @@ In this assignment information about the boiling point of simple molecules is re
   library(rJava)
   library(rcdk)
 
-  parsed_smiles <- parse.smiles(r$CC)
+  parsed_smiles <- parse.smiles(r$SMILES)
 
   descNames <- c(
   'org.openscience.cdk.qsar.descriptors.molecular.FragmentComplexityDescriptor',
@@ -52,11 +52,15 @@ In this assignment information about the boiling point of simple molecules is re
   )
 
   descs <- eval.desc(parsed_smiles, descNames)
+  
+  descs$fragC <- descs$fragC / max(descs$fragC)
+  descs$WPATH <- descs$WPATH / max(descs$WPATH)
+  descs$WPOL <- descs$WPOL / max(descs$WPOL)
 ```
 
 ```{r pls}
   library(pls)
-  pls_model <- plsr(r$bp ~ (descs$WPATH + descs$WPOL), nt = 10, validation = "CV")
+  pls_model <- plsr(r$bp ~ (descs$WPATH + descs$WPOL), validation = "CV")
   plot(pls_model$residuals)
   summary(pls_model)
 ```

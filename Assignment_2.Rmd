@@ -13,7 +13,7 @@ In this assignment information about the boiling point of simple molecules is re
 
 ```{r library, echo = FALSE, error=FALSE}
   # install packages
-  install.packages(c("wikidataQueryServiceR", "rJava", "rcdk"))
+  install.packages(c("wikidataQueryServiceR", "rJava", "rcdk", "pls"))
 ```
 
 ### SPARQL
@@ -48,13 +48,15 @@ In this assignment information about the boiling point of simple molecules is re
 
   descNames <- c(
   'org.openscience.cdk.qsar.descriptors.molecular.FragmentComplexityDescriptor',
-  'org.openscience.cdk.qsar.descriptors.molecular.WienerNumbersDescriptor',
-  'org.openscience.cdk.qsar.descriptors.molecular.FMFDescriptor'
+  'org.openscience.cdk.qsar.descriptors.molecular.WienerNumbersDescriptor'
   )
 
   descs <- eval.desc(parsed_smiles, descNames)
 ```
 
 ```{r pls}
-  
+  library(pls)
+  pls_model <- plsr(r$bp ~ (descs$WPATH + descs$WPOL), nt = 10, validation = "CV")
+  plot(pls_model$residuals)
+  summary(pls_model)
 ```

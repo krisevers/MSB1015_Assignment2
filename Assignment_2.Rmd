@@ -9,17 +9,17 @@ output: html_notebook
 
 In this assignment information about the boiling point of simple molecules is requested by running a SPARQL query on the Wikidata database. Alkanes are molecules with only single bonds. It is straightforward to see a relationship between the number of carbon atoms a molecule has and the boiling point. The determination is more complicated than that though. Molecules with the same number of atoms can have different structures. A branched alkane has a different boiling point than a unbranched alkane with the same number of carbon atoms. In this assignment the Partial Least Squares method is used to determine what the best predictor(s) is/are for the measure of boiling point.
 
-### Setup of dependencies
+### Installing dependencies
 
 ```{r library, echo = FALSE, error=FALSE}
-  # install packages
+  # install required packages
   install.packages(c("wikidataQueryServiceR", "rJava", "rcdk", "pls"))
 ```
 
-### SPARQL
+### Wikidata Query Service R
 
 ```{r query}
-  # load wikidataQueryServiceR package
+  # load required package
   library(WikidataQueryServiceR)
 
   # define and request query
@@ -32,6 +32,8 @@ In this assignment information about the boiling point of simple molecules is re
                       ')
 ```
 
+### Boiling point conversion to kelvin
+
 ```{r bp conversion}
   # conversion of boiling point temperatures to degree kelvin
   r$bp[r$bpUnitLabel == "degree Celsius"] <- r$bp[r$bpUnitLabel == "degree Celsius"] + 273.15
@@ -40,27 +42,37 @@ In this assignment information about the boiling point of simple molecules is re
   r$bpUnitLabel[r$bpUnitLabel == "degree Fahrenheit"] <- "kelvin"
 ```
 
+### Parse SMILES and get descriptor values
+
 ```{r smiles}
+  # load required packages
   library(rJava)
   library(rcdk)
-
+  
+  # parsing the smiles column to a IAtomContainer
   parsed_smiles <- parse.smiles(r$SMILES)
-
+  
+  # fetching the descriptors per SMILES (i.e. molecule)
   descNames <- c(
   'org.openscience.cdk.qsar.descriptors.molecular.FragmentComplexityDescriptor',
   'org.openscience.cdk.qsar.descriptors.molecular.WienerNumbersDescriptor'
   )
-
   descs <- eval.desc(parsed_smiles, descNames)
   
+  # normalizing the descriptor values
   descs$fragC <- descs$fragC / max(descs$fragC)
   descs$WPATH <- descs$WPATH / max(descs$WPATH)
   descs$WPOL <- descs$WPOL / max(descs$WPOL)
 ```
 
+### Partial least squares regression
+
 ```{r pls}
+  # load required package
   library(pls)
-  pls_model <- plsr(r$bp ~ (descs$WPATH + descs$WPOL), validation = "CV")
+  
+  # build the pls model using plsr function 
+  pls_model <- plsr(r$bp ~ (descs$fragC + descs$WPATH + descs$WPOL), validation = "CV")
   plot(pls_model$residuals)
   summary(pls_model)
 ```

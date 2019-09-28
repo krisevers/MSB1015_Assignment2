@@ -1,0 +1,34 @@
+---
+title:  "Assignment_2"
+author: "Kris Evers"
+date:   "2019-09-23"
+output: html_notebook
+---
+
+## Scientific Programming | Assignment 2
+
+In this assignment information about the boiling point of simple molecules is requested by running a SPARQL query on the Wikidata database. Alkanes are molecules with only single bonds. It is straightforward to see a relationship between the number of carbon atoms a molecule has and the boiling point. The determination is more complicated than that though. Molecules with the same number of atoms can have different structures. A branched alkane has a different boiling point than a unbranched alkane with the same number of carbon atoms. In this assignment the Partial Least Squares method is used to determine what the best predictor(s) is/are for the measure of boiling point.
+
+### Setup of dependencies
+
+```{r library, echo = FALSE, error=FALSE}
+  # install packages
+  install.packages(c("wikidataQueryServiceR"))
+  
+  # load packages
+  library(WikidataQueryServiceR)
+```
+
+### SPARQL
+
+```{r}
+  # define and request query
+  r <- query_wikidata('SELECT ?anes ?anesLabel ?CC ?bp
+WHERE {
+  ?anes wdt:P31/wdt:P279* wd:Q41581 .
+  ?anes wdt:P233 ?CC .
+  MINUS {?anes wdt:P2102 ?bp .}
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en"}
+}')
+```
+```

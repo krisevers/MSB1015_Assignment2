@@ -13,15 +13,15 @@ In this assignment information about the boiling point of simple molecules is re
 
 ```{r library, echo = FALSE, error=FALSE}
   # install packages
-  install.packages(c("wikidataQueryServiceR"))
-  
-  # load packages
-  library(WikidataQueryServiceR)
+  install.packages(c("wikidataQueryServiceR", "rJava", "rcdk"))
 ```
 
 ### SPARQL
 
-```{r}
+```{r query}
+  # load wikidataQueryServiceR package
+  library(WikidataQueryServiceR)
+
   # define and request query
   r <- query_wikidata('SELECT ?anes ?anesLabel ?CC ?bp
 WHERE {
@@ -31,4 +31,22 @@ WHERE {
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en"}
 }')
 ```
+
+```{r smiles}
+  library(rJava)
+  library(rcdk)
+
+  parsed_smiles <- parse.smiles(r[,4])
+
+  descNames <- c(
+  'org.openscience.cdk.qsar.descriptors.molecular.FragmentComplexityDescriptor',
+  'org.openscience.cdk.qsar.descriptors.molecular.WienerNumbersDescriptor',
+  'org.openscience.cdk.qsar.descriptors.molecular.FMFDescriptor'
+  )
+
+  descs <- eval.desc(parsed_smiles, descNames)
+```
+
+```{r pls}
+
 ```

@@ -15,7 +15,7 @@ In this project multiple R packages are required. The function query_wikidata fr
 
 ```{r library, echo = FALSE, error=FALSE}
   # install required packages
-  install.packages(c("wikidataQueryServiceR", "rJava", "rcdk", "pls", "caTools"))
+  install.packages(c("wikidataQueryServiceR", "rJava", "rcdk", "pls"))
 ```
 
 ### Wikidata Query Service R
@@ -50,7 +50,6 @@ In this project multiple R packages are required. The function query_wikidata fr
   # load required packages
   library(rJava)
   library(rcdk)
-  library(caTools)
   
   # parsing the smiles column to a IAtomContainer
   parsed_smiles <- parse.smiles(r$SMILES)
@@ -66,15 +65,15 @@ In this project multiple R packages are required. The function query_wikidata fr
   data_set <- data.frame(r$bp, descs)
   
   # set percentage of data that goes to the test set and the training set
-  percentage <- 0.3
+  fraction_test <- floor(0.3 * nrow(data_set))
   # set a random seed for sampling (for reproducibility make sure the seed is set to 5 before running the   sampling line)
   set.seed(5)
   
   # taking a random sample of of 30% of the data
-  sample <- sample.split(data_set, SplitRatio = percentage)
+  sample_test <- sample(seq_len(nrow(data_set)), size = fraction)
   # make a training set and a test set using the defined sample
-  train <- subset(data_set, sample = FALSE)     # set the training set (70%)
-  test  <- subset(data_set, sample = TRUE)      # set the test set     (30%)
+  train <- data_set[-sample_test,]     # set the training set (70%)
+  test  <- data_set[sample_test,]      # set the test set     (30%)
 ```
 
 ### Partial least squares regression
@@ -84,7 +83,7 @@ In this project multiple R packages are required. The function query_wikidata fr
   library(pls)
   
   # build the pls model using plsr function 
-  pls_model <- plsr(r$bp ~ ., data = train, validation = "CV")
+  pls_model <- plsr(r.bp ~ ., data = train, validation = "CV")
   plot(pls_model$residuals)
   summary(pls_model)
 ```

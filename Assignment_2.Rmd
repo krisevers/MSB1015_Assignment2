@@ -57,14 +57,9 @@ In this project multiple R packages are required. The function query_wikidata fr
   # fetching the descriptors per SMILES (i.e. molecule)
   descNames <- c(
   'org.openscience.cdk.qsar.descriptors.molecular.FragmentComplexityDescriptor',
-  'org.openscience.cdk.qsar.descriptors.molecular.WienerNumbersDescriptor'
+  'org.openscience.cdk.qsar.descriptors.molecular.WienerNumbersDescriptor',
   )
   descs <- eval.desc(parsed_smiles, descNames)
-  
-  # normalizing the descriptor values
-  descs$fragC <- descs$fragC / max(descs$fragC)
-  descs$WPATH <- descs$WPATH / max(descs$WPATH)
-  descs$WPOL <- descs$WPOL / max(descs$WPOL)
 ```
 
 ### Partial least squares regression

@@ -57,9 +57,12 @@ In this project multiple R packages are required. The function query_wikidata fr
   # fetching the descriptors per SMILES (i.e. molecule)
   descNames <- c(
   'org.openscience.cdk.qsar.descriptors.molecular.FragmentComplexityDescriptor',
-  'org.openscience.cdk.qsar.descriptors.molecular.WienerNumbersDescriptor',
+  'org.openscience.cdk.qsar.descriptors.molecular.WienerNumbersDescriptor'
   )
   descs <- eval.desc(parsed_smiles, descNames)
+  
+  # combine boiling point data and descriptors in one data frame
+  data_set <- data.frame(r$bp, descs)
 ```
 
 ### Partial least squares regression
@@ -69,7 +72,7 @@ In this project multiple R packages are required. The function query_wikidata fr
   library(pls)
   
   # build the pls model using plsr function 
-  pls_model <- plsr(r$bp ~ (descs$fragC + descs$WPATH + descs$WPOL), validation = "CV")
+  pls_model <- plsr(r$bp ~ ., data = data_set, validation = "CV")
   plot(pls_model$residuals)
   summary(pls_model)
 ```

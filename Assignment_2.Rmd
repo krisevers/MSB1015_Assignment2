@@ -15,7 +15,7 @@ In this project multiple R packages are required. The function query_wikidata fr
 
 ```{r library, echo = FALSE, error=FALSE}
   # install required packages
-  install.packages(c("wikidataQueryServiceR", "rJava", "rcdk", "pls"))
+  install.packages(c("wikidataQueryServiceR", "rJava", "rcdk", "pls", "caTools"))
 ```
 
 ### Wikidata Query Service R
@@ -50,6 +50,7 @@ In this project multiple R packages are required. The function query_wikidata fr
   # load required packages
   library(rJava)
   library(rcdk)
+  library(caTools)
   
   # parsing the smiles column to a IAtomContainer
   parsed_smiles <- parse.smiles(r$SMILES)
@@ -70,7 +71,7 @@ In this project multiple R packages are required. The function query_wikidata fr
   set.seed(5)
   
   # taking a random sample of of 30% of the data
-  sample <- sample.split(data_set, SplitRatio = perentage)
+  sample <- sample.split(data_set, SplitRatio = percentage)
   # make a training set and a test set using the defined sample
   train <- subset(data_set, sample = FALSE)     # set the training set (70%)
   test  <- subset(data_set, sample = TRUE)      # set the test set     (30%)
@@ -83,7 +84,7 @@ In this project multiple R packages are required. The function query_wikidata fr
   library(pls)
   
   # build the pls model using plsr function 
-  pls_model <- plsr(r$bp ~ ., data = data_set, validation = "CV")
+  pls_model <- plsr(r$bp ~ ., data = train, validation = "CV")
   plot(pls_model$residuals)
   summary(pls_model)
 ```

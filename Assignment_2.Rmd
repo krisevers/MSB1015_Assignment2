@@ -11,6 +11,8 @@ In this assignment information about the boiling point of simple molecules is re
 
 ### Installing dependencies
 
+In this project multiple R packages are required. The function query_wikidata from the WikiQueryServiceR package is used to parse a query that requests data from the WikiData database. rJava is a dependency of the rcdk package and thus needs to be installed here. The rcdk package (R chemical development kit) is used to parse the SMILES format and receive chemical descriptors which will be used in the PLS process as predictors for the boiling point. The pls library will be used to perform PLS process.
+
 ```{r library, echo = FALSE, error=FALSE}
   # install required packages
   install.packages(c("wikidataQueryServiceR", "rJava", "rcdk", "pls"))

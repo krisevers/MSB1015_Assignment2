@@ -54,10 +54,12 @@ Because not all boiling points that are returned by the WikiData Query Service s
 
 The R Chemical Development Kit has some useful functions for chemical calculations. It can parse SMILES strings and return an object called IAtomContainer. This object contains information about a molecule and can be used within the rcdk package to obtain other chemical information about the molecule like complexity, polarity, etc. This information is stored in descriptors of which its values are called using descriptor names and the function eval.desc. Here the Fragment Complexity Descriptor [1] and the Wiener Number Descriptor [2] are used as they are measures of the complexity of a molecule and thus potentially good predictors of the boiling point of a molecule.
 
+[Java needs to be installed to run the next section (rJava is dependency). The code is built with java 1.8.0 installed.]
+
 ```{r smiles}
   # load required packages
-  library(rJava)
-  library(rcdk)
+  library(rJava)  # java required
+  library(rcdk)   # rJava required
   
   # parsing the smiles column to a IAtomContainer
   parsed_smiles <- parse.smiles(alkanes$SMILES)
@@ -77,6 +79,8 @@ The R Chemical Development Kit has some useful functions for chemical calculatio
 ### Splitting data in training and test set
 
 To build and test a PLS model of the data the data should be split in a training and a test set. The training set is by convention bigger than the test set. Here a random sample of 70% of the molecules will be stored in the training set. The rest of the data is put in the test set (30%).
+
+[random sample seed = 5]
   
 ```{r split dataset}
   # set percentage of data that goes to the test set and the training set
@@ -108,7 +112,6 @@ The function 'plsr' from the pls package performs the PLS algorithm. It takes th
 ```
 
 ### References
-
 
 [1] Nilakantan, R. and Nunn, D.S. and Greenblatt, L. and Walker, G. and Haraki, K. and Mobilio, D., A family of ring system-based structural fragments for use in structure-activity studies: database mining and recursive partitioning., Journal of chemical information and modeling, 2006, 46:1069-1077
 

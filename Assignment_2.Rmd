@@ -7,25 +7,29 @@ output: html_notebook
 
 ## Scientific Programming | Assignment 2
 
-In this assignment information about the boiling point of simple molecules is requested by running a SPARQL query on the Wikidata database. Alkanes are molecules with only single bonds. It is straightforward to see a relationship between the number of carbon atoms a molecule has and the boiling point. The determination is more complicated than that though. Molecules with the same number of atoms can have different structures. A branched alkane has a different boiling point than a unbranched alkane with the same number of carbon atoms. In this assignment the Partial Least Squares method is used to determine what the best predictor(s) is/are for the measure of boiling point.
+In this assignment information about the boiling point of alkane molecules is requested by running a SPARQL query on the Wikidata database. Alkanes are molecules with only single bonds. It is straightforward to see a relationship between the number of carbon atoms a molecule has and the boiling point. The determination is more complicated than that though. Molecules with the same number of atoms can have different structures. A branched alkane has a different boiling point than a unbranched alkane with the same number of carbon atoms. In this assignment the Partial Least Squares method is used to determine what the best predictor(s) is/are for the measure of boiling point.
 
 ### Installing dependencies
 
-In this project multiple R packages are required. The function query_wikidata from the WikiQueryServiceR package is used to parse a query that requests data from the WikiData database. rJava is a dependency of the rcdk package and thus needs to be installed here. The rcdk package (R chemical development kit) is used to parse the SMILES format and receive chemical descriptors which will be used in the PLS process as predictors for the boiling point. The pls library will be used to perform PLS process.
+In this project multiple R packages are required. The function 'query_wikidata' from the WikiQueryServiceR package is used to parse a query that requests data from the WikiData database. rJava is a dependency of the rcdk package and thus needs to be installed here. The rcdk package (R chemical development kit) is used to parse the SMILES format and receive chemical descriptors which will be used in the PLS process as predictors for the boiling point. The pls library will be used to perform PLS process.
 
-```{r library, echo = FALSE, error=FALSE}
+```{r installation}
   # install required packages
   install.packages(c("wikidataQueryServiceR", "rJava", "rcdk", "pls"))
 ```
 
 ### Wikidata Query Service R
 
+To fetch the boiling points and structural information of the molecules from the Wikidata database the function 'query_wikidata' from the WikidataQueryServiceR is used. This function parses a query in a format which is accepted by the WikiData Query Service. The alkane labels, boiling points, boiling point units and SMILES string are requested for all the distinct alkanes that are found in the database.
+
+[134 alkanes are returned by the WikiData Query Service]
+
 ```{r query}
   # load required package
   library(WikidataQueryServiceR)
 
   # define and request query
-  r <- query_wikidata('SELECT ?ane ?aneLabel ?bp ?bpUnit ?bpUnitLabel ?SMILES 
+  alkanes <- query_wikidata('SELECT DISTINCT ?ane ?aneLabel ?bp ?bpUnit ?bpUnitLabel ?SMILES 
                       WHERE {   ?ane wdt:P31/wdt:P279* wd:Q41581 ;   
                       wdt:P233 ?SMILES ;     
                       p:P2102 [         ps:P2102 ?bp ;           
@@ -36,15 +40,19 @@ In this project multiple R packages are required. The function query_wikidata fr
 
 ### Boiling point conversion to kelvin
 
+Because not all boiling points that are returned by the WikiData Query Service some of them need to be transformed so that all boiling points have the same unit and that they thus can be compared in analysis. Here is chosen to convert all boiling points in celcius and fahrenheit to kelvin, as kelvin is the most used unit in chemistry. There are R packages available which are able to perform this transformation, although here the choice is made to calculate the transformation by hand as it is a very straightforward calculation this gives more insight in the transformation.
+
 ```{r bp conversion}
   # conversion of boiling point temperatures to degree kelvin
-  r$bp[r$bpUnitLabel == "degree Celsius"] <- r$bp[r$bpUnitLabel == "degree Celsius"] + 273.15
-  r$bpUnitLabel[r$bpUnitLabel == "degree Celsius"] <- "kelvin"
-  r$bp[r$bpUnitLabel == "degree Fahrenheit"] <- (r$bp[r$bpUnitLabel == "degree Fahrenheit"]-32)*5/9 + 273.15
-  r$bpUnitLabel[r$bpUnitLabel == "degree Fahrenheit"] <- "kelvin"
+  alkanes$bp[alkanes$bpUnitLabel == "degree Celsius"]             <- alkanes$bp[alkanes$bpUnitLabel == "degree Celsius"] + 273.15
+  alkanes$bpUnitLabel[alkanes$bpUnitLabel == "degree Celsius"]    <- "kelvin"
+  alkanes$bp[alkanes$bpUnitLabel == "degree Fahrenheit"]          <- (alkanes$bp[alkanes$bpUnitLabel == "degree Fahrenheit"]-32)*5/9 + 273.15
+  alkanes$bpUnitLabel[alkanes$bpUnitLabel == "degree Fahrenheit"] <- "kelvin"
 ```
 
 ### Parse SMILES and get descriptor values
+
+The R Chemical Development Kit has some useful functions for chemical calculations. It can parse SMILES strings and return an object called IAtomContainer. This object contains information about a molecule and can be used within the rcdk package to obtain other chemical information about the molecule like complexity, polarity, etc. This information is stored in descriptors of which its values are called using descriptor names and the function eval.desc. Here the Fragment Complexity Descriptor [1] and the Wiener Number Descriptor [2] are used as they are measures of the complexity of a molecule and thus potentially good predictors of the boiling point of a molecule.
 
 ```{r smiles}
   # load required packages
@@ -52,38 +60,56 @@ In this project multiple R packages are required. The function query_wikidata fr
   library(rcdk)
   
   # parsing the smiles column to a IAtomContainer
-  parsed_smiles <- parse.smiles(r$SMILES)
+  parsed_smiles <- parse.smiles(alkanes$SMILES)
   
-  # fetching the descriptors per SMILES (i.e. molecule)
+  # defining the molecular descriptors 
   descNames <- c(
   'org.openscience.cdk.qsar.descriptors.molecular.FragmentComplexityDescriptor',
   'org.openscience.cdk.qsar.descriptors.molecular.WienerNumbersDescriptor'
   )
+  # fetch the descriptors values per SMILES (i.e. molecule)
   descs <- eval.desc(parsed_smiles, descNames)
   
   # combine boiling point data and descriptors in one data frame
-  data_set <- data.frame(r$bp, descs)
+  bp_and_descs <- data.frame(alkanes$bp, descs)
+```
   
+### Splitting data in training and test set
+
+To build and test a PLS model of the data the data should be split in a training and a test set. The training set is by convention bigger than the test set. Here a random sample of 70% of the molecules will be stored in the training set. The rest of the data is put in the test set (30%).
+  
+```{r split dataset}
   # set percentage of data that goes to the test set and the training set
-  fraction_test <- floor(0.3 * nrow(data_set))
-  # set a random seed for sampling (for reproducibility make sure the seed is set to 5 before running the   sampling line)
+  fraction_test <- floor(0.3 * nrow(alkanes_and_descs))
+  # set a random seed for sampling (for reproducibility make sure the seed is set to 5 before running the sampling line)
   set.seed(5)
   
   # taking a random sample of of 30% of the data
-  sample_test <- sample(seq_len(nrow(data_set)), size = fraction)
+  sample_test <- sample(seq_len(nrow(bp_and_descs)), size = fraction_test)
   # make a training set and a test set using the defined sample
-  train <- data_set[-sample_test,]     # set the training set (70%)
-  test  <- data_set[sample_test,]      # set the test set     (30%)
+  train <- bp_and_descs[-sample_test,]     # set the training set (70%)
+  test  <- bp_and_descs[sample_test,]      # set the test set     (30%)
 ```
 
 ### Partial least squares regression
+
+PLS is a regression method related to principal component analysis although in PLS a linear regression model is projecting the observed and predicted variable in a new space so that the relationship between the variables can be captured in latent variables. The latent variables are linear combinations of the observed variables. 
+The function 'plsr' from the pls package performs the PLS algorithm. It takes the dataframe containing the predicted (boiling point) and observable (descriptor values) variables. Cross validation is used as a validation method. Cross validation splits the specified data into a internal train and test set for multiple iterations and tests every model on its internal test set. This will improve the performance of the PLS method on prediction.
 
 ```{r pls}
   # load required package
   library(pls)
   
-  # build the pls model using plsr function 
-  pls_model <- plsr(r.bp ~ ., data = train, validation = "CV")
+  # build the pls model using plsr function
+  pls_model <- plsr(alkanes.bp ~ ., data = train, validation = "CV")
+  # plotting model residuals
   plot(pls_model$residuals)
   summary(pls_model)
 ```
+
+### References
+
+
+[1] Nilakantan, R. and Nunn, D.S. and Greenblatt, L. and Walker, G. and Haraki, K. and Mobilio, D., A family of ring system-based structural fragments for use in structure-activity studies: database mining and recursive partitioning., Journal of chemical information and modeling, 2006, 46:1069-1077
+
+[2] Wiener, Harry, Structural Determination of Paraffin Boiling Points, Journal of the American Chemical Society, 1947

@@ -1,4 +1,4 @@
-# MSB1015 Assignment 2 : Predicting boiling point based on chemical descriptors using PLS regression
+# MSB1015 Assignment 2 : Predicting boiling points of alkanes based on chemical descriptors using PLS regression
 This project is linked to Assignment 2 of the course MSB1015 Scientific Programming at the Maastricht University. The goal of this assignment and thus of this project is to write a working R markdown file with which a user is able to perform PLS regression on chemical information about alkane molecules to predict their boiling points.
 
 ## Introduction

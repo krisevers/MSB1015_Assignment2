@@ -6,16 +6,16 @@ In this assignment information about the boiling point of alkane molecules is re
 
 ## Installation
 Open the file **index.html** in a modern webbrowser or click [here](https://krisevers.github.io/MSB1015_Assignment2/) to go to the Github Pages page of the project.
-To run Assignment_2.Rmd in a dedicated notebook environment download the file and make sure the 4 required packages are available for installation.
+To run **Assignment_2.Rmd** in a dedicated notebook environment download the file and make sure the required packages are available for installation (_wikidataQueryServiceR_, _rJava_, _rcdk_, _Metrics_, _pls_).
 
 To run the code the user should be aware of the dependencies and the requirements for reproducibility. The following points are repeated within the code file to make sure the user is aware of the them:
 
 ### Dependencies:
 * Make sure that all required packages are installed correctly before running through the dependent sections.
-* Make sure a version of Java is installed that is compatible with the rJava package. Java can be downloaded [here](https://www.oracle.com/technetwork/java/javase/downloads/index.html).
+* Make sure a version of _Java_ is installed that is compatible with the _rJava_ package. _Java_ can be downloaded [here](https://www.oracle.com/technetwork/java/javase/downloads/index.html).
 
 ### Reproducibility:
-* Make sure that 134 rows of molecules are returned from the query request.
+* Make sure that 134 rows of molecules are returned from the query request. If this is not the case, the methods might still work although the results won't be identical to results that the conclusions are based on.
 * Make sure the random seed is set to 5.
 
 If the user is aware of these points the code can be savely executed section by section. If the user runs into problems she/he can contact the first author of this project.

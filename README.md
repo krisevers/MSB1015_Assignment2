@@ -10,20 +10,22 @@ To run **Assignment_2.Rmd** in a dedicated notebook environment download the fil
 
 To run the code the user should be aware of the dependencies and the requirements for reproducibility. The following points are repeated within the code file to make sure the user is aware of the them:
 
-### Dependencies:
+### Dependencies
 * Make sure that all required packages are installed correctly before running through the dependent sections.
 * Make sure a version of _Java_ is installed that is compatible with the _rJava_ package. _Java_ can be downloaded [here](https://www.oracle.com/technetwork/java/javase/downloads/index.html).
 
-### Reproducibility:
+### Reproducibility
 * Make sure that 134 rows of molecules are returned from the query request. If this is not the case, the methods might still work although the results won't be identical to results that the conclusions are based on.
 * Make sure the random seed is set to 5.
 
 If the user is aware of these points the code can be savely executed section by section. If the user runs into problems she/he can contact the first author of this project.
 
 ## Authors
-Kris Evers
+* Kris Evers
+  * Supervision: Egon Willighagen
 
-Supervision: Egon Willighagen
+## Code of Conduct
+Please note that this project is released with a Contributor Code of Conduct. By participating in this project you agree to abide by its terms.
 
 ## References
 [1] Nilakantan, R. and Nunn, D.S. and Greenblatt, L. and Walker, G. and Haraki, K. and Mobilio, D., A family of ring system-based structural fragments for use in structure-activity studies: database mining and recursive partitioning., Journal of chemical information and modeling, 2006, 46:1069-1077

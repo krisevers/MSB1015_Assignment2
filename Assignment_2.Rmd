@@ -1,7 +1,7 @@
 ---
 title:  "Assignment_2"
-author: "Kris Evers"
-date:   "2019-09-23"
+author: "Kris Evers, i6202223"
+date:   "2019-10-13"
 output: html_notebook
 ---
 
@@ -56,14 +56,14 @@ A plot of the boiling points of all the molecules is shown to indicated that the
 
 ```{r}
   #plot the boiling point data
-  plot(r$bp, main = 'boiling points temperatures of molecules', xlab = 'molecule index', ylab = 'boiling point temperature (K)')
+  plot(r$bp, main = 'figure 1: boiling points temperatures of molecules', xlab = 'molecule index', ylab = 'boiling point temperature (K)')
 ```
 
 ### 4 Parse SMILES and get descriptor values
 
-The R Chemical Development Kit has some useful functions for chemical calculations. It can parse SMILES strings and return an object called IAtomContainer. This object contains information about a molecule and can be used within the rcdk package to obtain other chemical information about the molecule like complexity, polarity, etc. This information is stored in descriptors of which its values are called using descriptor names and the function eval.desc. Here the Fragment Complexity Descriptor [1] and the Wiener Number Descriptor [2] are used as they are measures of the complexity of a molecule and thus potentially good predictors of the boiling point of a molecule.
+The R Chemical Development Kit has some useful functions for chemical calculations. It can parse SMILES strings and return an object called IAtomContainer. This object contains information about a molecule and can be used within the rcdk package to obtain other chemical information about the molecule like complexity, polarity, etc. This information is stored in descriptors of which its values are called using descriptor names and the function eval.desc. Here the Fragment Complexity Descriptor [1], the Wiener Number Descriptor [2] and the APol Descriptor are used as they are measures of the complexity of a molecule and thus potentially good predictors of the boiling point of a molecule.
 
-[Java needs to be installed to run the next section (rJava is dependency). The code is built with java 1.8.0 installed]
+[Java needs to be installed to run the next section (rJava is dependenct on Java). The code is built with java 1.8.0 installed]
 
 ```{r smiles}
   # load required packages
@@ -73,7 +73,7 @@ The R Chemical Development Kit has some useful functions for chemical calculatio
   # parsing the smiles column to a IAtomContainer
   parsed_smiles <- parse.smiles(alkanes$SMILES)
   
-  # defining the molecular descriptors 
+  # defining the molecular descriptors
   descNames <- c(
   'org.openscience.cdk.qsar.descriptors.molecular.FragmentComplexityDescriptor',
   'org.openscience.cdk.qsar.descriptors.molecular.WienerNumbersDescriptor',
@@ -105,6 +105,13 @@ To build and test a PLS model of the data the data should be split in a training
   test  <- bp_and_descs[sample_test,]      # set the test set     (30%)
 ```
 
+### 5. Null model
+
+```{r null model}
+  # calculation of the null model
+  null_model = mean(train$alkanes.bp)
+```
+
 ### 6. Partial least squares regression
 
 PLS is a regression method related to principal component analysis although in PLS a linear regression model is projecting the observed and predicted variable in a new space so that the relationship between the variables can be captured in latent variables. The latent variables are linear combinations of the observed variables. 
@@ -116,9 +123,12 @@ The function 'plsr' from the pls package performs the PLS algorithm. It takes th
   
   # build the pls model using plsr function
   pls_model <- plsr(alkanes.bp ~ ., data = train, validation = "CV")
-  # plotting model residuals
-  plot(pls_model$residuals)
-  summary(pls_model)
+  
+  # calculating the rms error on the test data for a different number of components
+  error <- RMSEP(pls_model, newdata = test)
+  
+  # predict the boiling point of the test set using the pls model
+  predict_bp <- predict(pls_model, test)
 ```
 
 ### 7. References

@@ -1,0 +1,8 @@
+cff-version: 1
+message: If you use this software, please cite it as below.
+authors:
+  - family-names: Evers
+    given-names: Kris Stefan
+title: MSB1015_Assignment2
+version: 1
+date-released: 2019-10-13

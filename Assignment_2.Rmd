@@ -7,11 +7,11 @@ output: html_notebook
 
 ## Scientific Programming | Assignment 2
 
-In this assignment information about the boiling point of alkane molecules is requested by running a SPARQL query on the Wikidata database. Alkanes are molecules with only single bonds. It is straightforward to see a relationship between the number of carbon atoms a molecule has and the boiling point. The determination is more complicated than that though. Molecules with the same number of atoms can have different structures. A branched alkane has a different boiling point than a unbranched alkane with the same number of carbon atoms. In this assignment the Partial Least Squares method is used to determine what the best predictor(s) is/are for the measure of boiling point.
+In this assignment information about the boiling point of alkane molecules is requested by running a SPARQL query on the Wikidata database. Alkanes are molecules with only single bonds. It is too simple to assume a linear relationship between the number of carbon atoms of a molecule has and its boiling point. Different molecules with the same number of atoms have different structures. A branched alkane has a different boiling point than a unbranched alkane with the same number of carbon atoms. In this assignment multiple descriptors that describe some measure of the complexity of the structure are used to make a PLS model that is able to predict the boiling points of the alkanes. A list of alkanes, their boiling points and SMILES string is obtained with a query request to the Wikidata database.
 
 ### 1. Installing dependencies
 
-In this project multiple R packages are required. The function 'query_wikidata' from the WikiQueryServiceR package is used to parse a query that requests data from the WikiData database. rJava is a dependency of the rcdk package and thus needs to be installed here. The rcdk package (R chemical development kit) is used to parse the SMILES format and receive chemical descriptors which will be used in the PLS process as predictors for the boiling point. The pls library will be used to perform PLS process.
+In this project multiple R packages are required. The function 'query_wikidata' from the WikiQueryServiceR package [4] is used to parse a query that requests data from the WikiData database. rJava [5] is a dependency of the rcdk package [6] and thus needs to be installed here. The rcdk package (R chemical development kit) [7] is used to parse the SMILES format and receive chemical descriptors which will be used in the PLS process as predictors for the boiling point. The pls library will be used to perform PLS process.
 
 ```{r installation}
   # install required packages
@@ -20,13 +20,13 @@ In this project multiple R packages are required. The function 'query_wikidata' 
 
 ### 2. Wikidata Query Service R
 
-To fetch the boiling points and structural information of the molecules from the Wikidata database the function 'query_wikidata' from the WikidataQueryServiceR is used. This function parses a query in a format which is accepted by the WikiData Query Service. The alkane labels, boiling points, boiling point units and SMILES string are requested for all the distinct alkanes that are found in the database.
+To fetch the boiling points and structural information of the molecules from the Wikidata database the function 'query_wikidata' from the WikidataQueryServiceR is used. This function parses a query in a format which is accepted by the WikiData Query Service. The alkane labels, boiling points, boiling point units and SMILES string are requested for all the distinct alkanes that are found in the database. SMILES strings are specifications of the chemical structure of a molecule in string format and will later be used to get chemical descriptors for the complexity of the chemical structure.
 
 [134 alkanes are returned by the WikiData Query Service]
 
 ```{r query}
   # load required package
-  library(WikidataQueryServiceR)
+  library(WikidataQueryServiceR) [4]
 
   # define and request query
   alkanes <- query_wikidata('SELECT DISTINCT ?ane ?aneLabel ?bp ?bpUnit ?bpUnitLabel ?SMILES 
@@ -54,16 +54,27 @@ Because not all boiling points that are returned by the WikiData Query Service s
 
 A plot of the boiling points of all the molecules is shown to indicated that there are no clear outliers in the obtained dataset.
 
-```{r}
+```{r bp plot}
   #plot the boiling point data
-  plot(r$bp, main = 'figure 1: boiling points temperatures of molecules', xlab = 'molecule index', ylab = 'boiling point temperature (K)')
+  plot(alkanes$bp, main = 'figure 1: boiling points temperatures of molecules', 
+                   xlab = 'molecule index', 
+                   ylab = 'boiling point temperature (K)')
 ```
 
 ### 4 Parse SMILES and get descriptor values
 
-The R Chemical Development Kit has some useful functions for chemical calculations. It can parse SMILES strings and return an object called IAtomContainer. This object contains information about a molecule and can be used within the rcdk package to obtain other chemical information about the molecule like complexity, polarity, etc. This information is stored in descriptors of which its values are called using descriptor names and the function eval.desc. Here the Fragment Complexity Descriptor [1], the Wiener Number Descriptor [2] and the APol Descriptor are used as they are measures of the complexity of a molecule and thus potentially good predictors of the boiling point of a molecule.
+The R Chemical Development Kit has some useful functions for chemical calculations. It can parse SMILES strings and return an object called IAtomContainer. This object contains information about a molecule and can be used within the rcdk package to obtain other chemical information about the molecule like complexity, polarity, etc. This information is stored in descriptors of which its values are called using descriptor names and the function eval.desc. Here the Fragment Complexity Descriptor [1], the Wiener Number Descriptor [2] and the APol Descriptor [3] are used as they are measures of the complexity of a molecule and thus potentially good predictors of the boiling point of a molecule. The descriptors are briefly described here:
 
-[Java needs to be installed to run the next section (rJava is dependenct on Java). The code is built with java 1.8.0 installed]
+**FragmentComplexityDescriptor**:
+Returns the complexity of a system.
+
+**WienerNumbersDescriptor**:
+This gives the Wiener numbers (see ref1). It returns the Wiener Path Number and the Wiener Polarity Number.
+
+**APolDescriptor**:
+This describes the sum of the atomic polarizabilities.
+
+[Java needs to be installed to run the next section (rJava is dependenct on Java). This code is built with java 1.8.0 installed]
 
 ```{r smiles}
   # load required packages
@@ -94,7 +105,7 @@ To build and test a PLS model of the data the data should be split in a training
   
 ```{r split dataset}
   # set percentage of data that goes to the test set and the training set
-  fraction_test <- floor(0.3 * nrow(alkanes_and_descs))
+  fraction_test <- floor(0.3 * nrow(bp_and_descs))
   # set a random seed for sampling (for reproducibility make sure the seed is set to 5 before running the sampling line)
   set.seed(5)
   
@@ -139,15 +150,22 @@ Here the results of the PLS regression are shown and conclusions are drawn from 
 
 ```{r error}
   # plot the error to the number of components
-  plot(error, main = 'figure 2: error', xlab = '#components', ylab = 'RMSE (K)')
+  plot(error, main = 'figure 2: error', 
+              xlab = '#components', 
+              ylab = 'RMSE (K)')
 ```
 
 #### Conclusion
 From figure 2 it can be concluded that by increasing the number of components in the model the root mean square error decreases and plateaus at the inclusion of the 3rd component at 50 K.
 
 ```{r}
-  # 
-  plot(test$alkanes.bp, predict_bp[,,3], xlim=c(300,1000), ylim=c(300,1000), main = "figure 3: predicted vs measured boiling points", cex.main = 0.8, xlab = "measured boiling points (K)", ylab = "predicted boiling points (K)")
+  # plot the prediction of the pls model on the test data, the ideal model and the null model
+  plot(test$alkanes.bp, predict_bp[,,3], xlim=c(300,1000), 
+                                         ylim=c(300,1000), 
+                                         main = "figure 3: predicted vs measured boiling points", 
+                                         cex.main = 0.8, 
+                                         xlab = "measured boiling points (K)", 
+                                         ylab = "predicted boiling points (K)")
   lines(test$alkanes.bp, rep(null_model, length(test$alkanes.bp)), col = "blue")
   lines(test$alkanes.bp, test$alkanes.bp, col = "orange")
   legend("topleft", c("null model", "ideal model", "PLS model"), col = c("blue", "orange", "black"), pch = c(20), bty = 'n')
@@ -163,3 +181,11 @@ figure 3 shows that the PLS model has a generally linear shape and is closer to 
 [2] Wiener, Harry, Structural Determination of Paraffin Boiling Points, Journal of the American Chemical Society, 1947
 
 [3] https://cdk.github.io/cdk/1.5/docs/api/org/openscience/cdk/qsar/descriptors/molecular/APolDescriptor.html 
+
+[4] [WikidataQuerySerivceR](https://CRAN.R-project.org/package=WikidataQueryServiceR) Mikhail Popov (2017). WikidataQueryServiceR: API Client Library for 'Wikidata Query Service'. R package version 0.1.1.
+
+[5] [rJava](https://CRAN.R-project.org/package=rJava) Simon Urbanek (2019). rJava: Low-Level R to Java Interface. R package version 0.9-11.
+
+[6] [rcdk](https://cran.r-project.org/web/packages/rcdk/index.html) Guha, R. (2007). 'Chemical Informatics Functionality in R'. Journal of Statistical Software 6(18)
+
+[7] [pls](https://CRAN.R-project.org/package=pls) Bjørn-Helge Mevik, Ron Wehrens and Kristian Hovde Liland (2019). pls: Partial Least Squares and Principal Component Regression. R package version 2.7-1.

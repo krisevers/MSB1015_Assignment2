@@ -6,7 +6,7 @@ In this assignment information about the boiling point of alkane molecules is re
 
 ## Installation
 Open the file **index.html** in a modern webbrowser or click [here](https://krisevers.github.io/MSB1015_Assignment2/) to go to the Github Pages page of the project.
-To run Assignment_2.Rmd in a dedicated notebook environment download the file and make sure the 4 required packages are available for installation. See the next section for details on dependencies and reproducibility.
+To run Assignment_2.Rmd in a dedicated notebook environment download the file and make sure the 4 required packages are available for installation.
 
 To run the code the user should be aware of the dependencies and the requirements for reproducibility. The following points are repeated within the code file to make sure the user is aware of the them:
 

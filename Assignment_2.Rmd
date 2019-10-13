@@ -1,11 +1,11 @@
 ---
-title:  "Assignment_2"
+title:  "Assignment 2"
 author: "Kris Evers, i6202223"
 date:   "2019-10-13"
 output: html_notebook
 ---
 
-## Scientific Programming | Assignment 2
+## Introduction
 
 In this assignment information about the boiling point of alkane molecules is requested by running a SPARQL query on the Wikidata database. Alkanes are molecules with only single bonds. It is too simple to assume a linear relationship between the number of carbon atoms of a molecule has and its boiling point. Different molecules with the same number of atoms have different structures. A branched alkane has a different boiling point than a unbranched alkane with the same number of carbon atoms. In this assignment multiple descriptors that describe some measure of the complexity of the structure are used to make a PLS model that is able to predict the boiling points of the alkanes. A list of alkanes, their boiling points and SMILES string is obtained with a query request to the Wikidata database.
 

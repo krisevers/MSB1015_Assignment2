@@ -11,11 +11,11 @@ In this assignment information about the boiling point of alkane molecules is re
 
 ### 1. Installing dependencies
 
-In this project multiple R packages are required. The function 'query_wikidata' from the WikiQueryServiceR package [4] is used to parse a query that requests data from the WikiData database. rJava [5] is a dependency of the rcdk package [6] and thus needs to be installed here. The rcdk package (R chemical development kit) [7] is used to parse the SMILES format and receive chemical descriptors which will be used in the PLS process as predictors for the boiling point. The pls library will be used to perform PLS process.
+In this project multiple R packages are required. The function 'query_wikidata' from the WikiQueryServiceR package [4] is used to parse a query that requests data from the WikiData database. rJava [5] is a dependency of the rcdk package [6] and thus needs to be installed here. The rcdk package (R chemical development kit) is used to parse the SMILES format and receive chemical descriptors which will be used in the PLS process as predictors for the boiling point. The 'rmse' function from the Metrics package [7] is used to calculate the error of the null model. The pls library [8] will be used to perform PLS process.
 
 ```{r installation}
   # install required packages
-  install.packages(c("wikidataQueryServiceR", "rJava", "rcdk", "pls"))
+  install.packages(c("wikidataQueryServiceR", "rJava", "rcdk", "Metrics", "pls"))
 ```
 
 ### 2. Wikidata Query Service R
@@ -121,8 +121,14 @@ To build and test a PLS model of the data the data should be split in a training
 The null model is the most simple model of the data. The mean of the boiling points is used as the predictor for the boiling point of a molecule. Of course differences between molecules and their predictive value for 
 
 ```{r null model}
+  # load required package
+  library(Metrics)
+  
   # calculation of the null model
   null_model = mean(train$alkanes.bp)
+
+  # error of the null model
+  error_null_model <- rmse(test$alkanes.bp, null_model)
 ```
 
 ### 6. Partial least squares regression
@@ -138,7 +144,7 @@ The function 'plsr' from the pls package performs the PLS algorithm. It takes th
   pls_model <- plsr(alkanes.bp ~ ., data = train, validation = "CV")
   
   # calculating the rms error on the test data for a different number of components
-  error <- RMSEP(pls_model, newdata = test)
+  error_pls_model <- RMSEP(pls_model, newdata = test)
   
   # predict the boiling point of the test set using the pls model
   predict_bp <- predict(pls_model, test)
@@ -150,13 +156,15 @@ Here the results of the PLS regression are shown and conclusions are drawn from 
 
 ```{r error}
   # plot the error to the number of components
-  plot(error, main = 'figure 2: error', 
+  plot(error_pls_model, main = 'figure 2: error of the null model and the PLS model', 
               xlab = '#components', 
               ylab = 'RMSE (K)')
+  abline(h=error_null_model, col="blue")
+  legend("right", c("error null model", "error PLS model"), col = c("blue", "black"), pch = c(20), bty = 'n')
 ```
 
 #### Conclusion
-From figure 2 it can be concluded that by increasing the number of components in the model the root mean square error decreases and plateaus at the inclusion of the 3rd component at 50 K.
+From figure 2 it can be concluded that by increasing the number of components in the PLS model the root mean square error decreases and plateaus at the inclusion of the 3rd component at 50 K. The error of the null model is also shown as a line in the figure and it can be concluded from this figure that the PLS model has beter performance than the null model for all number of components.
 
 ```{r}
   # plot the prediction of the pls model on the test data, the ideal model and the null model
@@ -188,4 +196,6 @@ figure 3 shows that the PLS model has a generally linear shape and is closer to 
 
 [6] [rcdk](https://cran.r-project.org/web/packages/rcdk/index.html) Guha, R. (2007). 'Chemical Informatics Functionality in R'. Journal of Statistical Software 6(18)
 
-[7] [pls](https://CRAN.R-project.org/package=pls) Bjørn-Helge Mevik, Ron Wehrens and Kristian Hovde Liland (2019). pls: Partial Least Squares and Principal Component Regression. R package version 2.7-1.
+[7] [Metrics](https://CRAN.R-project.org/package=Metrics) Ben Hamner and Michael Frasco (2018). Metrics: Evaluation Metrics for Machine Learning. R package version 0.1.4.
+
+[8] [pls](https://CRAN.R-project.org/package=pls) Bjørn-Helge Mevik, Ron Wehrens and Kristian Hovde Liland (2019). pls: Partial Least Squares and Principal Component Regression. R package version 2.7-1.
